@@ -3,7 +3,7 @@ package splitblockbloom
 import (
 	"math"
 
-	"github.com/segmentio/fasthash/fnv1a"
+	"github.com/axiomhq/splitblockbloom/internal/fnv1a"
 )
 
 const (
