@@ -5,7 +5,16 @@ import (
 	"io"
 )
 
-var internalHashSeeds = []uint64{0x44974d91, 0x47b6137b, 0xa2b7289d, 0x8824ad5b, 0x2df1424b, 0x705495c7, 0x5c6bfb31, 0x9efc4947}
+var internalHashSeeds = [...]uint64{
+	0x44974d91,
+	0x47b6137b,
+	0xa2b7289d,
+	0x8824ad5b,
+	0x2df1424b,
+	0x705495c7,
+	0x5c6bfb31,
+	0x9efc4947,
+}
 
 func makeMask(hash uint64) [wordsPerBlock]uint32 {
 	// TODO: This is a constant we can avoid a loop
