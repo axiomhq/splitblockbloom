@@ -2,34 +2,38 @@ package splitblockbloom
 
 import (
 	"bytes"
-	"fmt"
 	"testing"
 
 	"github.com/axiomhq/splitblockbloom/internal/byteseeker"
+	"github.com/segmentio/fasthash/fnv1a"
 )
 
 func TestFilter(t *testing.T) {
-	bb := NewFilter(1e6, 0.004)
+	fpp := 0.004
+	bb := NewFilter(1e6, fpp)
 	for i := 0; i < 1e6; i++ {
-		bb.Add([]byte(fmt.Sprintf("val%d", i)))
+		bb.AddHash(fnv1a.HashUint64(uint64(i)))
 	}
 
 	for i := 0; i < 1e6; i++ {
-		if !bb.Contains([]byte(fmt.Sprintf("val%d", i))) {
+		if !bb.Contains(fnv1a.HashUint64(uint64(i))) {
 			t.Errorf("val%d should be in the filter", i)
 		}
 	}
 
 	errs := 0
 	for i := int(1e6); i < 10e6; i++ {
-		if bb.Contains([]byte(fmt.Sprintf("val%d", i))) {
+		if bb.Contains(fnv1a.HashUint64(uint64(i))) {
 			errs++
-			//t.Errorf("val%d should not be in the filter", i)
 		}
 	}
 
-	t.Log("errs:", float64(errs)/1e6)
+	ratio := float64(errs) / 1e6
+	t.Log("errs ratio", ratio)
 	t.Log("size:", bb.SizeInBytes())
+	if ratio > fpp {
+		t.Errorf("error ratio should be less than %f, got %f", fpp, ratio)
+	}
 
 	buf := bytes.NewBuffer(nil)
 	n, err := bb.WriteTo(buf)
@@ -42,7 +46,7 @@ func TestFilter(t *testing.T) {
 	t.Log("wrote:", n, "bytes", "len:", len(b))
 
 	for i := 0; i < 1e6; i++ {
-		ok, err := ContainsFromStream(&byteseeker.Buffer{B: b}, len(bb), []byte(fmt.Sprintf("val%d", i)))
+		ok, err := ContainsFromStream(&byteseeker.Buffer{B: b}, len(bb), fnv1a.HashUint64(uint64(i)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -53,15 +57,19 @@ func TestFilter(t *testing.T) {
 
 	errs = 0
 	for i := int(1e6); i < 10e6; i++ {
-		ok, err := ContainsFromStream(&byteseeker.Buffer{B: b}, len(bb), []byte(fmt.Sprintf("val%d", i)))
+		ok, err := ContainsFromStream(&byteseeker.Buffer{B: b}, len(bb), fnv1a.HashUint64(uint64(i)))
 		if err != nil {
 			t.Fatal(err)
 		}
 		if ok {
 			errs++
-			//t.Errorf("val%d should not be in the filter", i)
 		}
 	}
 
-	t.Log("errs:", float64(errs)/1e6)
+	ratio = float64(errs) / 1e6
+	t.Log("errs ratio", ratio)
+	t.Log("size:", bb.SizeInBytes())
+	if ratio > fpp {
+		t.Errorf("error ratio should be less than %f, got %f", fpp, ratio)
+	}
 }

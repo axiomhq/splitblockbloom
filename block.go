@@ -16,15 +16,6 @@ var internalHashSeeds = [...]uint64{
 	0x9efc4947,
 }
 
-func makeMask(hash uint64) [wordsPerBlock]uint32 {
-	// TODO: This is a constant we can avoid a loop
-	var result [wordsPerBlock]uint32
-	for i := range result {
-		result[i] = 1 << ((uint32(hash) * uint32(internalHashSeeds[i])) >> (32 - 5))
-	}
-	return result
-}
-
 var (
 	_ io.ReaderFrom = (*Block)(nil)
 	_ io.WriterTo   = (*Block)(nil)
@@ -32,17 +23,15 @@ var (
 
 type Block [wordsPerBlock]uint32
 
-func (blk *Block) Add(val []byte) {
-	h := hash(val, blockSeed)
+func (blk *Block) AddHash(hash uint64) {
 	for i, m := range internalHashSeeds {
-		blk[i] |= 1 << ((uint32(h) * uint32(m)) >> (32 - 5))
+		blk[i] |= 1 << ((uint32(hash) * uint32(m)) >> (32 - 5))
 	}
 }
 
-func (blk *Block) Contains(val []byte) bool {
-	h := hash(val, blockSeed)
+func (blk *Block) Contains(hash uint64) bool {
 	for i, m := range internalHashSeeds {
-		if blk[i]&(1<<((uint32(h)*uint32(m))>>(32-5))) == 0 {
+		if blk[i]&(1<<((uint32(hash)*uint32(m))>>(32-5))) == 0 {
 			return false
 		}
 	}

@@ -16,9 +16,11 @@ func NewFilter(ndv uint64, fpp float64) Filter {
 }
 
 func (f Filter) SizeInBytes() int { return len(f) * blockSizeInBytes }
-func (f Filter) Add(val []byte)   { f[hash(val, filterSeed)%uint64(len(f))].Add(val) }
-func (f Filter) Contains(val []byte) bool {
-	return f[hash(val, filterSeed)%uint64(len(f))].Contains(val)
+
+func (f Filter) AddHash(hash uint64) { f[hash%uint64(len(f))].AddHash(hash) }
+
+func (f Filter) Contains(hash uint64) bool {
+	return f[hash%uint64(len(f))].Contains(hash)
 }
 
 func (f Filter) WriteTo(w io.Writer) (int64, error) {

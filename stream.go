@@ -18,11 +18,11 @@ func BlockFromStream(stream io.ReadSeeker, blockCount, idx int) (*Block, error) 
 	return block, nil
 }
 
-func ContainsFromStream(stream io.ReadSeeker, blockCount int, val []byte) (bool, error) {
-	blockIdx := hash(val, filterSeed) % uint64(blockCount)
+func ContainsFromStream(stream io.ReadSeeker, blockCount int, hash uint64) (bool, error) {
+	blockIdx := hash % uint64(blockCount)
 	block, err := BlockFromStream(stream, blockCount, int(blockIdx))
 	if err != nil {
 		return false, err
 	}
-	return block.Contains(val), nil
+	return block.Contains(hash), nil
 }
