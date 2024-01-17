@@ -5,6 +5,9 @@ import (
 	"io"
 )
 
+var _ io.ReaderFrom = (*Filter)(nil)
+var _ io.WriterTo = (*Filter)(nil)
+
 type Filter []Block
 
 // NewFilter creates a new blocked bloom filter.
@@ -20,12 +23,13 @@ func (f Filter) Contains(val []byte) bool {
 
 func (f Filter) WriteTo(w io.Writer) (int64, error) {
 	// write block count of filter
-	byts := make([]byte, 8)
-	binary.LittleEndian.PutUint64(byts, uint64(len(f)))
-	totalN, err := w.Write(byts)
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, uint64(len(f)))
+	wrote, err := w.Write(b)
 	if err != nil {
-		return int64(totalN), err
+		return int64(wrote), err
 	}
+	totalN := int64(wrote)
 	// write each block
 	for _, b := range f {
 		n, err := b.WriteTo(w)
@@ -37,15 +41,16 @@ func (f Filter) WriteTo(w io.Writer) (int64, error) {
 	return int64(totalN), nil
 }
 
-func (f Filter) ReaderFrom(r io.Reader) (int64, error) {
+func (f Filter) ReadFrom(r io.Reader) (int64, error) {
 	// read length of filter
-	byts := make([]byte, 8)
-	totalN, err := r.Read(byts)
+	b := make([]byte, 8)
+	read, err := r.Read(b)
 	if err != nil {
-		return int64(totalN), err
+		return int64(read), err
 	}
-	n := binary.LittleEndian.Uint64(byts)
+	n := binary.LittleEndian.Uint64(b)
 
+	totalN := int64(read)
 	// read each block
 	f = make([]Block, n)
 	for i := range f {

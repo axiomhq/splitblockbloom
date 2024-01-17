@@ -25,41 +25,45 @@ func makeMask(hash uint64) [wordsPerBlock]uint32 {
 	return result
 }
 
+var _ io.ReaderFrom = (*Block)(nil)
+var _ io.WriterTo = (*Block)(nil)
+
 type Block [wordsPerBlock]uint32
 
-func (b *Block) Add(val []byte) {
+func (blk *Block) Add(val []byte) {
 	h := hash(val, blockSeed)
 	for i, m := range makeMask(h) {
-		b[i] |= m
+		blk[i] |= m
 	}
 }
 
-func (b *Block) Contains(val []byte) bool {
+func (blk *Block) Contains(val []byte) bool {
 	h := hash(val, blockSeed)
 	for i, m := range makeMask(h) {
-		if b[i]&m == 0 {
+		if blk[i]&m == 0 {
 			return false
 		}
 	}
 	return true
 }
 
-func (b *Block) WriteTo(w io.Writer) (int, error) {
-	byts := make([]byte, blockSizeInBytes)
-	for i, v := range b {
-		binary.LittleEndian.PutUint32(byts[i*4:], v)
+func (blk *Block) WriteTo(w io.Writer) (int64, error) {
+	b := make([]byte, blockSizeInBytes)
+	for i, v := range blk {
+		binary.LittleEndian.PutUint32(b[i*4:], v)
 	}
-	return w.Write(byts)
+	n, err := w.Write(b)
+	return int64(n), err
 }
 
-func (b *Block) ReadFrom(r io.Reader) (int, error) {
-	byts := make([]byte, blockSizeInBytes)
-	n, err := r.Read(byts)
+func (blk *Block) ReadFrom(r io.Reader) (int64, error) {
+	b := make([]byte, blockSizeInBytes)
+	n, err := r.Read(b)
 	if err != nil {
-		return n, err
+		return int64(n), err
 	}
-	for i := range b {
-		b[i] = binary.LittleEndian.Uint32(byts[i*4:])
+	for i := range blk {
+		blk[i] = binary.LittleEndian.Uint32(b[i*4:])
 	}
-	return n, nil
+	return int64(n), nil
 }
