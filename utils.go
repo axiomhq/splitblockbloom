@@ -16,9 +16,11 @@ const (
 	blockSeed        = 0x5c6bfb31
 )
 
-func hash(val []byte, seed uint64) uint64 { return fnv1a.AddBytes64(seed, val) }
+func hash(val []byte, seed uint64) uint64 {
+	return fnv1a.AddBytes64(seed, val)
+}
 
-func calcFpp(ndv, bytes float64) float64 {
+func calcFalsePositiveRatio(ndv, bytes float64) float64 {
 	if ndv == 0 || bytes <= 0 || ndv/(bytes*8) > 3 {
 		return 1.0
 	}
@@ -41,9 +43,9 @@ func calcFpp(ndv, bytes float64) float64 {
 	return math.Min(result, 1.0)
 }
 
-func blockBytesNeeded(ndv, fpp float64) uint64 {
+func blockBytesNeeded(ndv, desiredFalsePositiveRatio float64) uint64 {
 	result := 1.0
-	for calcFpp(ndv, result) > fpp {
+	for calcFalsePositiveRatio(ndv, result) > desiredFalsePositiveRatio {
 		result *= 2
 	}
 	if result <= blockSizeInBytes {
@@ -53,7 +55,7 @@ func blockBytesNeeded(ndv, fpp float64) uint64 {
 	lo, hi := 0.0, result
 	for lo < hi-1 {
 		mid := lo + (hi-lo)/2
-		if calcFpp(ndv, mid) < fpp {
+		if calcFalsePositiveRatio(ndv, mid) < desiredFalsePositiveRatio {
 			hi = mid
 		} else {
 			lo = mid
