@@ -76,8 +76,8 @@ func TestFilter(t *testing.T) {
 		}
 	}
 
-	fmt.Println("errs:", float64(errs)/1e6)
-	fmt.Println("size:", bb.SizeInBytes())
+	t.Log("errs:", float64(errs)/1e6)
+	t.Log("size:", bb.SizeInBytes())
 
 	buf := bytes.NewBuffer(nil)
 	n, err := bb.WriteTo(buf)
@@ -85,12 +85,12 @@ func TestFilter(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	byts := buf.Bytes()
+	b := buf.Bytes()
 
-	fmt.Println("wrote:", n, "bytes", "len:", len(byts))
+	t.Log("wrote:", n, "bytes", "len:", len(b))
 
 	for i := 0; i < 1e6; i++ {
-		ok, err := ContainsFromStream(NewByteSliceReadSeeker(byts), len(bb), []byte(fmt.Sprintf("val%d", i)))
+		ok, err := ContainsFromStream(NewByteSliceReadSeeker(b), len(bb), []byte(fmt.Sprintf("val%d", i)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -101,7 +101,7 @@ func TestFilter(t *testing.T) {
 
 	errs = 0
 	for i := int(1e6); i < 10e6; i++ {
-		ok, err := ContainsFromStream(NewByteSliceReadSeeker(byts), len(bb), []byte(fmt.Sprintf("val%d", i)))
+		ok, err := ContainsFromStream(NewByteSliceReadSeeker(b), len(bb), []byte(fmt.Sprintf("val%d", i)))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -111,17 +111,5 @@ func TestFilter(t *testing.T) {
 		}
 	}
 
-	fmt.Println("errs:", float64(errs)/1e6)
-
-	/*
-		brs := NewByteSliceReadSeeker(byts)
-
-		expectedBlk1 := bb[0]
-		gotBlk1, err := BlockFromStream(brs, len(bb), 0)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		fmt.Println("expectedBlk1:", expectedBlk1, "gotBlk1:", gotBlk1)
-	*/
+	t.Log("errs:", float64(errs)/1e6)
 }
