@@ -1,0 +1,26 @@
+name: Go
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "stable"
+
+      - name: Setup golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          skip-cache: true
+
+      - name: Test
+        run: |
+          go test -short -run=. -bench=.

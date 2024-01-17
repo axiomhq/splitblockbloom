@@ -1,0 +1,17 @@
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - errname
+    - errorlint
+    - godot
+    - gofmt
+    - govet
+    - ineffassign
+    - prealloc
+    - revive
+    - thelper
+    - unconvert
+    - unparam
+    - unused
+    - wastedassign
