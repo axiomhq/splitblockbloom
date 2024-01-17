@@ -39,7 +39,7 @@ func (f Filter) WriteTo(w io.Writer) (int64, error) {
 	return totalN, nil
 }
 
-func (f Filter) ReadFrom(r io.Reader) (int64, error) {
+func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
 	// read length of filter
 	b := make([]byte, 8)
 	read, err := r.Read(b)
@@ -50,9 +50,9 @@ func (f Filter) ReadFrom(r io.Reader) (int64, error) {
 
 	totalN := int64(read)
 	// read each block
-	f = make([]block, n)
-	for i := range f {
-		n, err := f[i].ReadFrom(r)
+	*f = make([]block, n)
+	for i := range *f {
+		n, err := (*f)[i].ReadFrom(r)
 		totalN += n
 		if err != nil {
 			return totalN, err

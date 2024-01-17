@@ -1,10 +1,6 @@
 package splitblockbloom
 
-import (
-	"math"
-
-	"github.com/axiomhq/splitblockbloom/internal/fnv1a"
-)
+import "math"
 
 const (
 	bitsPerWord      = 32
@@ -15,10 +11,6 @@ const (
 	filterSeed       = 0x9747b28c
 	blockSeed        = 0x5c6bfb31
 )
-
-func hash(val []byte, seed uint64) uint64 {
-	return fnv1a.AddBytes64(seed, val)
-}
 
 func calcFalsePositiveRatio(ndv, bytes float64) float64 {
 	if ndv == 0 || bytes <= 0 || ndv/(bytes*8) > 3 {
