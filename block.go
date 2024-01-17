@@ -17,19 +17,19 @@ var internalHashSeeds = [...]uint64{
 }
 
 var (
-	_ io.ReaderFrom = (*Block)(nil)
-	_ io.WriterTo   = (*Block)(nil)
+	_ io.ReaderFrom = (*block)(nil)
+	_ io.WriterTo   = (*block)(nil)
 )
 
-type Block [wordsPerBlock]uint32
+type block [wordsPerBlock]uint32
 
-func (blk *Block) AddHash(hash uint64) {
+func (blk *block) AddHash(hash uint64) {
 	for i, m := range internalHashSeeds {
 		blk[i] |= 1 << ((uint32(hash) * uint32(m)) >> (32 - 5))
 	}
 }
 
-func (blk *Block) Contains(hash uint64) bool {
+func (blk *block) Contains(hash uint64) bool {
 	for i, m := range internalHashSeeds {
 		if blk[i]&(1<<((uint32(hash)*uint32(m))>>(32-5))) == 0 {
 			return false
@@ -38,7 +38,7 @@ func (blk *Block) Contains(hash uint64) bool {
 	return true
 }
 
-func (blk *Block) WriteTo(w io.Writer) (int64, error) {
+func (blk *block) WriteTo(w io.Writer) (int64, error) {
 	b := make([]byte, blockSizeInBytes)
 	for i, v := range blk {
 		binary.LittleEndian.PutUint32(b[i*4:], v)
@@ -47,7 +47,7 @@ func (blk *Block) WriteTo(w io.Writer) (int64, error) {
 	return int64(n), err
 }
 
-func (blk *Block) ReadFrom(r io.Reader) (int64, error) {
+func (blk *block) ReadFrom(r io.Reader) (int64, error) {
 	b := make([]byte, blockSizeInBytes)
 	n, err := r.Read(b)
 	if err != nil {

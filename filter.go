@@ -8,20 +8,16 @@ import (
 var _ io.ReaderFrom = (*Filter)(nil)
 var _ io.WriterTo = (*Filter)(nil)
 
-type Filter []Block
+type Filter []block
 
 // NewFilter creates a new blocked bloom filter.
 func NewFilter(ndv uint64, fpp float64) Filter {
-	return make([]Block, (blockBytesNeeded(float64(ndv), fpp)/blockSizeInBytes)*wordsPerBlock)
+	return make([]block, (blockBytesNeeded(float64(ndv), fpp)/blockSizeInBytes)*wordsPerBlock)
 }
 
-func (f Filter) SizeInBytes() int { return len(f) * blockSizeInBytes }
-
-func (f Filter) AddHash(hash uint64) { f[hash%uint64(len(f))].AddHash(hash) }
-
-func (f Filter) Contains(hash uint64) bool {
-	return f[hash%uint64(len(f))].Contains(hash)
-}
+func (f Filter) SizeInBytes() int          { return len(f) * blockSizeInBytes }
+func (f Filter) AddHash(hash uint64)       { f[hash%uint64(len(f))].AddHash(hash) }
+func (f Filter) Contains(hash uint64) bool { return f[hash%uint64(len(f))].Contains(hash) }
 
 func (f Filter) WriteTo(w io.Writer) (int64, error) {
 	// write block count of filter
@@ -54,7 +50,7 @@ func (f Filter) ReadFrom(r io.Reader) (int64, error) {
 
 	totalN := int64(read)
 	// read each block
-	f = make([]Block, n)
+	f = make([]block, n)
 	for i := range f {
 		n, err := f[i].ReadFrom(r)
 		totalN += n
