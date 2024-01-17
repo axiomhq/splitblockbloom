@@ -25,22 +25,24 @@ func makeMask(hash uint64) [wordsPerBlock]uint32 {
 	return result
 }
 
-var _ io.ReaderFrom = (*Block)(nil)
-var _ io.WriterTo = (*Block)(nil)
+var (
+	_ io.ReaderFrom = (*Block)(nil)
+	_ io.WriterTo   = (*Block)(nil)
+)
 
 type Block [wordsPerBlock]uint32
 
 func (blk *Block) Add(val []byte) {
 	h := hash(val, blockSeed)
-	for i, m := range makeMask(h) {
-		blk[i] |= m
+	for i, m := range internalHashSeeds {
+		blk[i] |= 1 << ((uint32(h) * uint32(m)) >> (32 - 5))
 	}
 }
 
 func (blk *Block) Contains(val []byte) bool {
 	h := hash(val, blockSeed)
-	for i, m := range makeMask(h) {
-		if blk[i]&m == 0 {
+	for i, m := range internalHashSeeds {
+		if blk[i]&(1<<((uint32(h)*uint32(m))>>(32-5))) == 0 {
 			return false
 		}
 	}
