@@ -35,10 +35,10 @@ func (f Filter) WriteTo(w io.Writer) (int64, error) {
 		n, err := b.WriteTo(w)
 		totalN += n
 		if err != nil {
-			return int64(totalN), err
+			return totalN, err
 		}
 	}
-	return int64(totalN), nil
+	return totalN, nil
 }
 
 func (f Filter) ReadFrom(r io.Reader) (int64, error) {
@@ -57,8 +57,8 @@ func (f Filter) ReadFrom(r io.Reader) (int64, error) {
 		n, err := f[i].ReadFrom(r)
 		totalN += n
 		if err != nil {
-			return int64(totalN), err
+			return totalN, err
 		}
 	}
-	return int64(totalN), nil
+	return totalN, nil
 }
