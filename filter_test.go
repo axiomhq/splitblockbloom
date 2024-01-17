@@ -1,4 +1,4 @@
-package splitblockebloom
+package splitblockbloom
 
 import (
 	"bytes"
