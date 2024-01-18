@@ -19,6 +19,12 @@ func (f Filter) SizeInBytes() int          { return len(f) * blockSizeInBytes }
 func (f Filter) AddHash(hash uint64)       { f[hash%uint64(len(f))].AddHash(hash) }
 func (f Filter) Contains(hash uint64) bool { return f[hash%uint64(len(f))].Contains(hash) }
 
+func (f Filter) Merge(other Filter) {
+	for i := range f {
+		f[i].Merge(&other[i])
+	}
+}
+
 func (f Filter) WriteTo(w io.Writer) (int64, error) {
 	// write block count of filter
 	b := make([]byte, 8)

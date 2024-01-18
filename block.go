@@ -38,6 +38,12 @@ func (blk *block) Contains(hash uint64) bool {
 	return true
 }
 
+func (blk *block) Merge(other *block) {
+	for i := range blk {
+		blk[i] |= other[i]
+	}
+}
+
 func (blk *block) WriteTo(w io.Writer) (int64, error) {
 	b := make([]byte, blockSizeInBytes)
 	for i, v := range blk {
