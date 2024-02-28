@@ -8,11 +8,11 @@ import (
 var _ io.ReaderFrom = (*Filter)(nil)
 var _ io.WriterTo = (*Filter)(nil)
 
-type Filter []block
+type Filter []Block
 
 // NewFilter creates a new blocked bloom filter.
 func NewFilter(ndv uint64, fpp float64) Filter {
-	return make([]block, (blockBytesNeeded(float64(ndv), fpp)/blockSizeInBytes)*wordsPerBlock)
+	return make([]Block, (blockBytesNeeded(float64(ndv), fpp)/blockSizeInBytes)*wordsPerBlock)
 }
 
 func (f Filter) SizeInBytes() int          { return len(f) * blockSizeInBytes }
@@ -56,7 +56,7 @@ func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
 
 	totalN := int64(read)
 	// read each block
-	*f = make([]block, n)
+	*f = make([]Block, n)
 	for i := range *f {
 		n, err := (*f)[i].ReadFrom(r)
 		totalN += n

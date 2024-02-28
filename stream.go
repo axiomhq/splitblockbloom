@@ -2,7 +2,7 @@ package splitblockbloom
 
 import "io"
 
-func blockFromStream(stream io.ReadSeeker, blockCount, idx int) (*block, error) {
+func blockFromStream(stream io.ReadSeeker, blockCount, idx int) (*Block, error) {
 	if idx >= blockCount {
 		return nil, io.EOF
 	}
@@ -11,7 +11,7 @@ func blockFromStream(stream io.ReadSeeker, blockCount, idx int) (*block, error) 
 		return nil, err
 	}
 	// Read the block
-	block := &block{}
+	block := &Block{}
 	if _, err := block.ReadFrom(stream); err != nil {
 		return nil, err
 	}
