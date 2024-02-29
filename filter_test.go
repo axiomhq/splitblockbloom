@@ -57,7 +57,7 @@ func TestFilterAll(t *testing.T) {
 		}
 
 		errs := 0
-		for i := int(count); i < count; i++ {
+		for i := count; i < count; i++ {
 			if bb.Contains(fnv1a.HashUint64(uint64(i))) {
 				errs++
 			}
@@ -83,7 +83,7 @@ func TestFilterAll(t *testing.T) {
 		}
 
 		errs = 0
-		for i := int(count); i < count; i++ {
+		for i := count; i < count; i++ {
 			ok, err := ContainsFromStream(&byteseeker.Buffer{B: b}, len(bb), fnv1a.HashUint64(uint64(i)))
 			require.NoError(t, err)
 			if ok {
