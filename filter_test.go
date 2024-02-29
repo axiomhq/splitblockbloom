@@ -14,7 +14,7 @@ func TestNewFilter(t *testing.T) {
 	fpp := 0.01
 
 	filter := NewFilter(ndv, fpp)
-	require.Len(t, filter, 0)
+	require.Greater(t, len(filter), 0)
 }
 
 func TestAddAndContains(t *testing.T) {
