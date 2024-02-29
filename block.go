@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-var internalHashSeeds = [...]uint64{
+var salt = [...]uint64{
 	0x44974d91,
 	0x47b6137b,
 	0xa2b7289d,
@@ -24,31 +24,48 @@ var (
 type Block [wordsPerBlock]uint32
 
 func (blk *Block) AddHash(hash uint64) {
-	for i, m := range internalHashSeeds {
-		blk[i] |= 1 << ((uint32(hash) * uint32(m)) >> (32 - 5))
-	}
+	blk[0] |= 1 << ((uint32(hash) * uint32(salt[0])) >> (27))
+	blk[1] |= 1 << ((uint32(hash) * uint32(salt[1])) >> (27))
+	blk[2] |= 1 << ((uint32(hash) * uint32(salt[2])) >> (27))
+	blk[3] |= 1 << ((uint32(hash) * uint32(salt[3])) >> (27))
+	blk[4] |= 1 << ((uint32(hash) * uint32(salt[4])) >> (27))
+	blk[5] |= 1 << ((uint32(hash) * uint32(salt[5])) >> (27))
+	blk[6] |= 1 << ((uint32(hash) * uint32(salt[6])) >> (27))
+	blk[7] |= 1 << ((uint32(hash) * uint32(salt[7])) >> (27))
 }
 
 func (blk *Block) Contains(hash uint64) bool {
-	for i, m := range internalHashSeeds {
-		if blk[i]&(1<<((uint32(hash)*uint32(m))>>(32-5))) == 0 {
-			return false
-		}
-	}
-	return true
+	return blk[0]&(1<<((uint32(hash)*uint32(salt[0]))>>(27))) != 0 &&
+		blk[1]&(1<<((uint32(hash)*uint32(salt[1]))>>(27))) != 0 &&
+		blk[2]&(1<<((uint32(hash)*uint32(salt[2]))>>(27))) != 0 &&
+		blk[3]&(1<<((uint32(hash)*uint32(salt[3]))>>(27))) != 0 &&
+		blk[4]&(1<<((uint32(hash)*uint32(salt[4]))>>(27))) != 0 &&
+		blk[5]&(1<<((uint32(hash)*uint32(salt[5]))>>(27))) != 0 &&
+		blk[6]&(1<<((uint32(hash)*uint32(salt[6]))>>(27))) != 0 &&
+		blk[7]&(1<<((uint32(hash)*uint32(salt[7]))>>(27))) != 0
 }
 
 func (blk *Block) Merge(other *Block) {
-	for i := range blk {
-		blk[i] |= other[i]
-	}
+	blk[0] |= other[0]
+	blk[1] |= other[1]
+	blk[2] |= other[2]
+	blk[3] |= other[3]
+	blk[4] |= other[4]
+	blk[5] |= other[5]
+	blk[6] |= other[6]
+	blk[7] |= other[7]
 }
 
 func (blk *Block) WriteTo(w io.Writer) (int64, error) {
 	b := make([]byte, blockSizeInBytes)
-	for i, v := range blk {
-		binary.LittleEndian.PutUint32(b[i*4:], v)
-	}
+	binary.LittleEndian.PutUint32(b[0*4:], blk[0])
+	binary.LittleEndian.PutUint32(b[1*4:], blk[1])
+	binary.LittleEndian.PutUint32(b[2*4:], blk[2])
+	binary.LittleEndian.PutUint32(b[3*4:], blk[3])
+	binary.LittleEndian.PutUint32(b[4*4:], blk[4])
+	binary.LittleEndian.PutUint32(b[5*4:], blk[5])
+	binary.LittleEndian.PutUint32(b[6*4:], blk[6])
+	binary.LittleEndian.PutUint32(b[7*4:], blk[7])
 	n, err := w.Write(b)
 	return int64(n), err
 }
@@ -59,8 +76,13 @@ func (blk *Block) ReadFrom(r io.Reader) (int64, error) {
 	if err != nil {
 		return int64(n), err
 	}
-	for i := range blk {
-		blk[i] = binary.LittleEndian.Uint32(b[i*4:])
-	}
+	blk[0] = binary.LittleEndian.Uint32(b[0*4:])
+	blk[1] = binary.LittleEndian.Uint32(b[1*4:])
+	blk[2] = binary.LittleEndian.Uint32(b[2*4:])
+	blk[3] = binary.LittleEndian.Uint32(b[3*4:])
+	blk[4] = binary.LittleEndian.Uint32(b[4*4:])
+	blk[5] = binary.LittleEndian.Uint32(b[5*4:])
+	blk[6] = binary.LittleEndian.Uint32(b[6*4:])
+	blk[7] = binary.LittleEndian.Uint32(b[7*4:])
 	return int64(n), nil
 }

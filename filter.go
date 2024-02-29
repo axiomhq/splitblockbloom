@@ -12,7 +12,8 @@ type Filter []Block
 
 // NewFilter creates a new blocked bloom filter.
 func NewFilter(ndv uint64, fpp float64) Filter {
-	return make([]Block, (blockBytesNeeded(float64(ndv), fpp)/blockSizeInBytes)*wordsPerBlock)
+	numBytes := bytesNeeded(float64(ndv), fpp) + blockSizeInBytes
+	return make([]Block, numBytes/blockSizeInBytes)
 }
 
 func (f Filter) SizeInBytes() int          { return len(f) * blockSizeInBytes }

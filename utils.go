@@ -35,7 +35,7 @@ func calcFalsePositiveRatio(ndv, bytes float64) float64 {
 	return math.Min(result, 1.0)
 }
 
-func blockBytesNeeded(ndv, desiredFalsePositiveRatio float64) uint64 {
+func bytesNeeded(ndv, desiredFalsePositiveRatio float64) uint64 {
 	result := 1.0
 	for calcFalsePositiveRatio(ndv, result) > desiredFalsePositiveRatio {
 		result *= 2
