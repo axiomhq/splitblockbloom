@@ -19,6 +19,7 @@ func NewFilter(ndv uint64, fpp float64) Filter {
 func (f Filter) SizeInBytes() int          { return len(f) * blockSizeInBytes }
 func (f Filter) AddHash(hash uint64)       { f[hash%uint64(len(f))].AddHash(hash) }
 func (f Filter) Contains(hash uint64) bool { return f[hash%uint64(len(f))].Contains(hash) }
+func (f Filter) NumBlocks() int            { return len(f) }
 
 func (f Filter) Merge(other Filter) {
 	for i := range f {
