@@ -67,6 +67,9 @@ func (blk *Block) WriteTo(w io.Writer) (int64, error) {
 	binary.LittleEndian.PutUint32(b[6*4:], blk[6])
 	binary.LittleEndian.PutUint32(b[7*4:], blk[7])
 	n, err := w.Write(b)
+	if n != blockSizeInBytes {
+		return int64(n), io.ErrShortWrite
+	}
 	return int64(n), err
 }
 
@@ -75,6 +78,9 @@ func (blk *Block) ReadFrom(r io.Reader) (int64, error) {
 	n, err := r.Read(b)
 	if err != nil {
 		return int64(n), err
+	}
+	if n != blockSizeInBytes {
+		return int64(n), io.ErrUnexpectedEOF
 	}
 	blk[0] = binary.LittleEndian.Uint32(b[0*4:])
 	blk[1] = binary.LittleEndian.Uint32(b[1*4:])
