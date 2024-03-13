@@ -75,7 +75,7 @@ func (blk *Block) WriteTo(w io.Writer) (int64, error) {
 
 func (blk *Block) ReadFrom(r io.Reader) (int64, error) {
 	b := make([]byte, blockSizeInBytes)
-	n, err := r.Read(b)
+	n, err := io.ReadFull(r, b)
 	if err != nil {
 		return int64(n), err
 	}
