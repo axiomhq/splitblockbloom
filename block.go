@@ -3,6 +3,7 @@ package splitblockbloom
 import (
 	"encoding/binary"
 	"io"
+	"math/bits"
 )
 
 var salt = [...]uint64{
@@ -43,6 +44,27 @@ func (blk *Block) Contains(hash uint64) bool {
 		blk[5]&(1<<((uint32(hash)*uint32(salt[5]))>>(27))) != 0 &&
 		blk[6]&(1<<((uint32(hash)*uint32(salt[6]))>>(27))) != 0 &&
 		blk[7]&(1<<((uint32(hash)*uint32(salt[7]))>>(27))) != 0
+}
+
+func (blk *Block) AddHashIfNotContains(hash uint64) bool {
+	changed := false
+	changed = changed || blk[0]&(1<<((uint32(hash)*uint32(salt[0]))>>(27))) == 0
+	changed = changed || blk[1]&(1<<((uint32(hash)*uint32(salt[1]))>>(27))) == 0
+	changed = changed || blk[2]&(1<<((uint32(hash)*uint32(salt[2]))>>(27))) == 0
+	changed = changed || blk[3]&(1<<((uint32(hash)*uint32(salt[3]))>>(27))) == 0
+	changed = changed || blk[4]&(1<<((uint32(hash)*uint32(salt[4]))>>(27))) == 0
+	changed = changed || blk[5]&(1<<((uint32(hash)*uint32(salt[5]))>>(27))) == 0
+	changed = changed || blk[6]&(1<<((uint32(hash)*uint32(salt[6]))>>(27))) == 0
+	changed = changed || blk[7]&(1<<((uint32(hash)*uint32(salt[7]))>>(27))) == 0
+	blk[0] |= 1 << ((uint32(hash) * uint32(salt[0])) >> (27))
+	blk[1] |= 1 << ((uint32(hash) * uint32(salt[1])) >> (27))
+	blk[2] |= 1 << ((uint32(hash) * uint32(salt[2])) >> (27))
+	blk[3] |= 1 << ((uint32(hash) * uint32(salt[3])) >> (27))
+	blk[4] |= 1 << ((uint32(hash) * uint32(salt[4])) >> (27))
+	blk[5] |= 1 << ((uint32(hash) * uint32(salt[5])) >> (27))
+	blk[6] |= 1 << ((uint32(hash) * uint32(salt[6])) >> (27))
+	blk[7] |= 1 << ((uint32(hash) * uint32(salt[7])) >> (27))
+	return changed
 }
 
 func (blk *Block) Merge(other *Block) {
@@ -91,4 +113,17 @@ func (blk *Block) ReadFrom(r io.Reader) (int64, error) {
 	blk[6] = binary.LittleEndian.Uint32(b[6*4:])
 	blk[7] = binary.LittleEndian.Uint32(b[7*4:])
 	return int64(n), nil
+}
+
+func (blk *Block) EstimateCardinality() int {
+	var count int
+	count += bits.OnesCount32(blk[0])
+	count += bits.OnesCount32(blk[1])
+	count += bits.OnesCount32(blk[2])
+	count += bits.OnesCount32(blk[3])
+	count += bits.OnesCount32(blk[4])
+	count += bits.OnesCount32(blk[5])
+	count += bits.OnesCount32(blk[6])
+	count += bits.OnesCount32(blk[7])
+	return count / 8
 }

@@ -68,3 +68,15 @@ func (f *Filter) ReadFrom(r io.Reader) (int64, error) {
 	}
 	return totalN, nil
 }
+
+func (f Filter) EstimateCardinality() int {
+	var sum int
+	for _, b := range f {
+		sum += b.EstimateCardinality()
+	}
+	return sum
+}
+
+func (f Filter) AddHashIfNotContains(hash uint64) bool {
+	return f[hash%uint64(len(f))].AddHashIfNotContains(hash)
+}
