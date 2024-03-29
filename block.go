@@ -2,8 +2,10 @@ package splitblockbloom
 
 import (
 	"encoding/binary"
+	"errors"
 	"io"
 	"math/bits"
+	"unsafe"
 )
 
 var salt = [...]uint64{
@@ -78,17 +80,29 @@ func (blk *Block) Merge(other *Block) {
 	blk[7] |= other[7]
 }
 
+func (blk *Block) UnmarshalBinary(bs []byte) error {
+	if len(bs) < blockSizeInBytes {
+		return errors.New("block: not enough bytes to unmarshal")
+	}
+	blk[0] = binary.LittleEndian.Uint32(bs[0*4:])
+	blk[1] = binary.LittleEndian.Uint32(bs[1*4:])
+	blk[2] = binary.LittleEndian.Uint32(bs[2*4:])
+	blk[3] = binary.LittleEndian.Uint32(bs[3*4:])
+	blk[4] = binary.LittleEndian.Uint32(bs[4*4:])
+	blk[5] = binary.LittleEndian.Uint32(bs[5*4:])
+	blk[6] = binary.LittleEndian.Uint32(bs[6*4:])
+	blk[7] = binary.LittleEndian.Uint32(bs[7*4:])
+	return nil
+}
+
+func (blk *Block) AppendTo(bs []byte) []byte {
+	return append(bs, unsafe.Slice((*byte)(unsafe.Pointer(&blk[0])), blockSizeInBytes)...)
+}
+
 func (blk *Block) WriteTo(w io.Writer) (int64, error) {
-	b := make([]byte, blockSizeInBytes)
-	binary.LittleEndian.PutUint32(b[0*4:], blk[0])
-	binary.LittleEndian.PutUint32(b[1*4:], blk[1])
-	binary.LittleEndian.PutUint32(b[2*4:], blk[2])
-	binary.LittleEndian.PutUint32(b[3*4:], blk[3])
-	binary.LittleEndian.PutUint32(b[4*4:], blk[4])
-	binary.LittleEndian.PutUint32(b[5*4:], blk[5])
-	binary.LittleEndian.PutUint32(b[6*4:], blk[6])
-	binary.LittleEndian.PutUint32(b[7*4:], blk[7])
-	n, err := w.Write(b)
+	var b [blockSizeInBytes]byte
+	blk.AppendTo(b[:])
+	n, err := w.Write(b[:])
 	if n != blockSizeInBytes {
 		return int64(n), io.ErrShortWrite
 	}
@@ -96,22 +110,14 @@ func (blk *Block) WriteTo(w io.Writer) (int64, error) {
 }
 
 func (blk *Block) ReadFrom(r io.Reader) (int64, error) {
-	b := make([]byte, blockSizeInBytes)
-	n, err := io.ReadFull(r, b)
+	var b [blockSizeInBytes]byte
+	n, err := io.ReadFull(r, b[:])
 	if err != nil {
 		return int64(n), err
 	}
-	if n != blockSizeInBytes {
-		return int64(n), io.ErrUnexpectedEOF
+	if err := blk.UnmarshalBinary(b[:]); err != nil {
+		return int64(n), err
 	}
-	blk[0] = binary.LittleEndian.Uint32(b[0*4:])
-	blk[1] = binary.LittleEndian.Uint32(b[1*4:])
-	blk[2] = binary.LittleEndian.Uint32(b[2*4:])
-	blk[3] = binary.LittleEndian.Uint32(b[3*4:])
-	blk[4] = binary.LittleEndian.Uint32(b[4*4:])
-	blk[5] = binary.LittleEndian.Uint32(b[5*4:])
-	blk[6] = binary.LittleEndian.Uint32(b[6*4:])
-	blk[7] = binary.LittleEndian.Uint32(b[7*4:])
 	return int64(n), nil
 }
 
