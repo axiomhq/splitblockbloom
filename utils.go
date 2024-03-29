@@ -1,6 +1,8 @@
 package splitblockbloom
 
-import "math"
+import (
+	"math"
+)
 
 const (
 	bitsPerWord      = 32
@@ -20,7 +22,7 @@ func calcFalsePositiveRatio(ndv, bytes float64) float64 {
 	lam := wordsPerBlock * bitsPerWord / ((bytes * 8) / ndv)
 	loglam := math.Log(lam)
 	log1collide := -hashBits * math.Log(2.0)
-	maxJ := 10000
+	maxJ := 100
 
 	var result float64
 	for j := 0; j < maxJ; j++ {
@@ -35,23 +37,21 @@ func calcFalsePositiveRatio(ndv, bytes float64) float64 {
 	return math.Min(result, 1.0)
 }
 
-func bytesNeeded(ndv, desiredFalsePositiveRatio float64) uint64 {
-	result := 1.0
-	for calcFalsePositiveRatio(ndv, result) > desiredFalsePositiveRatio {
-		result *= 2
-	}
-	if result <= blockSizeInBytes {
-		return blockSizeInBytes
-	}
+func RecommendedBitsPerValue(ndv uint64, desiredFalsePositiveRatio float64) float64 {
+	// start with the optimal number of bits per value according ti standard bloom filter formula
+	n := float64(ndv)
+	m := -n * math.Log(desiredFalsePositiveRatio) / (math.Log(2) * math.Log(2))
+	result := math.Ceil(m / blockSizeInBytes)
 
-	lo, hi := 0.0, result
+	lo, hi := result, result*2
 	for lo < hi-1 {
 		mid := lo + (hi-lo)/2
-		if calcFalsePositiveRatio(ndv, mid) < desiredFalsePositiveRatio {
+		if calcFalsePositiveRatio(n, mid) < desiredFalsePositiveRatio {
 			hi = mid
 		} else {
 			lo = mid
 		}
 	}
-	return uint64(math.Ceil(hi/blockSizeInBytes) * blockSizeInBytes)
+
+	return float64(m / n)
 }

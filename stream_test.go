@@ -2,12 +2,15 @@ package splitblockbloom
 
 import (
 	"bytes"
+	"math"
 	"testing"
 )
 
 func TestBlockFromStreamAndContainsFromStream(t *testing.T) {
 	// Create a filter and add a hash
-	filter := NewFilter(1000, 0.01)
+	fpp := 0.01
+	bvp := RecommendedBitsPerValue(1000, fpp)
+	filter := NewFilter(1000, uint64(math.Ceil(bvp)))
 	hash := uint64(123456)
 	filter.AddHash(hash)
 

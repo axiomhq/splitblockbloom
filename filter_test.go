@@ -2,6 +2,7 @@ package splitblockbloom
 
 import (
 	"bytes"
+	"math"
 	"testing"
 
 	"github.com/axiomhq/splitblockbloom/internal/byteseeker"
@@ -10,15 +11,24 @@ import (
 )
 
 func TestNewFilter(t *testing.T) {
-	ndv := uint64(1000)
-	fpp := 0.01
+	var (
+		ndv = uint64(1000)
+		fpr = 0.01
+		bvp = uint64(math.Ceil(RecommendedBitsPerValue(ndv, fpr)))
+	)
 
-	filter := NewFilter(ndv, fpp)
+	filter := NewFilter(ndv, bvp)
 	require.Greater(t, len(filter), 0)
 }
 
 func TestAddAndContains(t *testing.T) {
-	filter := NewFilter(1000, 0.01)
+	var (
+		ndv = uint64(1000)
+		fpr = 0.01
+		bvp = uint64(math.Ceil(RecommendedBitsPerValue(ndv, fpr)))
+	)
+
+	filter := NewFilter(1000, bvp)
 
 	hash := uint64(123456)
 	filter.AddHash(hash)
@@ -28,7 +38,13 @@ func TestAddAndContains(t *testing.T) {
 }
 
 func TestWriteToAndReadFrom(t *testing.T) {
-	filter := NewFilter(1000, 0.01)
+	var (
+		ndv = uint64(1000)
+		fpr = 0.01
+		bvp = uint64(math.Ceil(RecommendedBitsPerValue(ndv, fpr)))
+	)
+
+	filter := NewFilter(1000, bvp)
 	hash := uint64(123456)
 	filter.AddHash(hash)
 
@@ -44,10 +60,16 @@ func TestWriteToAndReadFrom(t *testing.T) {
 }
 
 func TestFilterAll(t *testing.T) {
-	fpps := []float64{0.004, 0.01, 0.1}
+	fprs := []float64{0.004, 0.01, 0.1}
+	bvps := []uint64{
+		uint64(math.Ceil(RecommendedBitsPerValue(1e6, fprs[0]))),
+		uint64(math.Ceil(RecommendedBitsPerValue(1e6, fprs[1]))),
+		uint64(math.Ceil(RecommendedBitsPerValue(1e6, fprs[2]))),
+	}
 	count := int(1e6)
-	for _, fpp := range fpps {
-		bb := NewFilter(uint64(count), fpp)
+	for i, bvp := range bvps {
+		bb := NewFilter(uint64(count), bvp)
+		fpr := fprs[i]
 		for i := 0; i < count; i++ {
 			bb.AddHash(fnv1a.HashUint64(uint64(i)))
 		}
@@ -66,7 +88,7 @@ func TestFilterAll(t *testing.T) {
 		ratio := float64(errs) / float64(count)
 		t.Log("errs ratio", ratio)
 		t.Log("size:", bb.SizeInBytes())
-		require.LessOrEqual(t, ratio, fpp)
+		require.LessOrEqual(t, ratio, fpr)
 
 		buf := bytes.NewBuffer(nil)
 		n, err := bb.WriteTo(buf)
@@ -94,6 +116,6 @@ func TestFilterAll(t *testing.T) {
 		ratio = float64(errs) / float64(count)
 		t.Log("errs ratio", ratio)
 		t.Log("size:", bb.SizeInBytes())
-		require.LessOrEqual(t, ratio, fpp)
+		require.LessOrEqual(t, ratio, fpr)
 	}
 }

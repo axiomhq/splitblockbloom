@@ -3,6 +3,7 @@ package splitblockbloom
 import (
 	"encoding/binary"
 	"io"
+	"math"
 )
 
 var _ io.ReaderFrom = (*Filter)(nil)
@@ -11,9 +12,10 @@ var _ io.WriterTo = (*Filter)(nil)
 type Filter []Block
 
 // NewFilter creates a new blocked bloom filter.
-func NewFilter(ndv uint64, fpp float64) Filter {
-	numBytes := bytesNeeded(float64(ndv), fpp) + blockSizeInBytes
-	return make([]Block, numBytes/blockSizeInBytes)
+func NewFilter(ndv, bpv uint64) Filter {
+	numBytes := ((float64(ndv * bpv)) + 7) / 8
+	numBlocks := (numBytes + (blockSizeInBytes - 1)) / blockSizeInBytes
+	return make([]Block, int(math.Ceil(numBlocks)))
 }
 
 func (f Filter) SizeInBytes() int          { return len(f) * blockSizeInBytes }
